@@ -11,7 +11,7 @@ import UIKit
 class TodoListViewController: UITableViewController {
 
     //Holds list of todo items
-    var itemArray = ["Pet Bruce", "Love Bruce", "Ask Bruce to stop biting me"]
+    var itemArray = [Item]()
     
     //User Defaults creates a plist file that holds key/value pairs. Can be used for small amounts of storage.
     let defaults = UserDefaults.standard
@@ -19,8 +19,20 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let newItem = Item()
+        newItem.title = "Pet Bruce"
+        itemArray.append(newItem)
+
+        let newItem2 = Item()
+        newItem2.title = "Love Bruce"
+        itemArray.append(newItem2)
+
+        let newItem3 = Item()
+        newItem3.title = "Ask Bruce to stop biting me"
+        itemArray.append(newItem3)
+        
         //Read array from User Defaults
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
             itemArray = items
         }
         
@@ -34,7 +46,11 @@ class TodoListViewController: UITableViewController {
         //indexPath is location identifier for each cell
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row]
+        let item = itemArray[indexPath.row]
+        
+        cell.textLabel?.text = item.title
+        
+        cell.accessoryType = item.done ? .checkmark : .none
         
         return cell
     }
@@ -49,17 +65,14 @@ class TodoListViewController: UITableViewController {
     //Cell is tapped.
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        //print("You tapped \(itemArray[indexPath.row])")
-        
         //Don't leave row selected upon tapping.
         tableView.deselectRow(at: indexPath, animated: false)
+
+        itemArray[indexPath.row].done = itemArray[indexPath.row].done ? false : true
+        //Even shorter way of setting it...
+        //itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        //Toggle checkmark value
-        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-           tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        tableView.reloadData()
         
     }
     
@@ -73,7 +86,9 @@ class TodoListViewController: UITableViewController {
         let action  = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //When user clicks the Add Item button on our UIAlert
 
-            self.itemArray.append(textField.text!)
+            let newItem = Item()
+            newItem.title = textField.text!
+            self.itemArray.append(newItem)
 
             //Save our array of todo items in user defaults. The key is used to retrieve item.
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
