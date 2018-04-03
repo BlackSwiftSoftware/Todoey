@@ -9,32 +9,30 @@
 import UIKit
 
 class TodoListViewController: UITableViewController {
-
+    
     //Holds list of todo items
     var itemArray = [Item]()
     
-    //User Defaults creates a plist file that holds key/value pairs. Can be used for small amounts of storage.
-    let defaults = UserDefaults.standard
+    //Create file path to the documents folder
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "Pet Bruce"
-        itemArray.append(newItem)
-
-        let newItem2 = Item()
-        newItem2.title = "Love Bruce"
-        itemArray.append(newItem2)
-
-        let newItem3 = Item()
-        newItem3.title = "Ask Bruce to stop biting me"
-        itemArray.append(newItem3)
+//        let newItem = Item()
+//        newItem.title = "Pet Bruce"
+//        itemArray.append(newItem)
+//
+//        let newItem2 = Item()
+//        newItem2.title = "Love Bruce"
+//        itemArray.append(newItem2)
+//
+//        let newItem3 = Item()
+//        newItem3.title = "Ask Bruce to stop biting me"
+//        itemArray.append(newItem3)
         
-        //Read array from User Defaults
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
+        //Read existing items
+        loadItems()
         
     }
     
@@ -72,7 +70,7 @@ class TodoListViewController: UITableViewController {
         //Even shorter way of setting it...
         //itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        tableView.reloadData()
+        saveItems()
         
     }
     
@@ -86,14 +84,14 @@ class TodoListViewController: UITableViewController {
         let action  = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //When user clicks the Add Item button on our UIAlert
 
+            //Update array with new item
             let newItem = Item()
             newItem.title = textField.text!
             self.itemArray.append(newItem)
-
-            //Save our array of todo items in user defaults. The key is used to retrieve item.
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
-            self.tableView.reloadData()
+            //Save changes
+            self.saveItems()
+
         }
         
         //Put a text field inside the
@@ -108,6 +106,34 @@ class TodoListViewController: UITableViewController {
         
     }
     
+    //Mark: - Model Manipulation Methods
+    
+    func saveItems() {
+
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding itemArray, \(error)")
+        }
+        
+        self.tableView.reloadData()
+
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding itemArray, \(error)")
+            }
+        }
+    }
     
 }
 
