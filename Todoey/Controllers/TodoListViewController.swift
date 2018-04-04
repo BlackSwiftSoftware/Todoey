@@ -14,6 +14,13 @@ class TodoListViewController: UITableViewController {
     //Holds list of todo items
     var itemArray = [Item]()
     
+    //Used to filter a list of items by a specific category
+    var selectedCategory: Category? {
+        didSet{
+            loadItems()
+        }
+    }
+    
     //The context for use with CoreData
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
@@ -34,9 +41,6 @@ class TodoListViewController: UITableViewController {
 //        let newItem3 = Item()
 //        newItem3.title = "Ask Bruce to stop biting me"
 //        itemArray.append(newItem3)
-        
-        //Read existing items
-        loadItems()
         
     }
     
@@ -108,12 +112,14 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
         let action  = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            
             //When user clicks the Add Item button on our UIAlert
 
             //Update array with new item
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             
             //Save changes
@@ -121,7 +127,7 @@ class TodoListViewController: UITableViewController {
 
         }
         
-        //Put a text field inside the
+        //Put a text field inside the alert
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item"
             textField = alertTextField
@@ -140,7 +146,7 @@ class TodoListViewController: UITableViewController {
         do {
             try context.save()
         } catch {
-            print("Error saving context. Error message: \(error)")
+            print("Error saving items to context. Error message: \(error)")
         }
         
         self.tableView.reloadData()
@@ -148,11 +154,21 @@ class TodoListViewController: UITableViewController {
     }
     
     //request parameter used for searching. Default value shows all items
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", (selectedCategory?.name)!)
+        
+        //Handle filtering by BOTH category and user entered search string
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
-            print("Error fetching data from context. Error message: \(error)")
+            print("Error fetching items from context. Error message: \(error)")
         }
 
         tableView.reloadData()
@@ -193,12 +209,12 @@ extension TodoListViewController: UISearchBarDelegate {
             
             //Query data to filter by search
             //[cd] makes query case and diacritic (letters with accent symbols) insensitive
-            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
             
             //Sort data using array of one element.
             request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
             
-            loadItems(with: request)
+            loadItems(with: request, predicate: predicate)
             
         }
     }
