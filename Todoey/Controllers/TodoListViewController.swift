@@ -7,17 +7,21 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
     //Holds list of todo items
     var itemArray = [Item]()
     
-    //Create file path to the documents folder
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    //The context for use with CoreData
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //print location where app is saving data
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
 //        let newItem = Item()
 //        newItem.title = "Pet Bruce"
@@ -66,9 +70,31 @@ class TodoListViewController: UITableViewController {
         //Don't leave row selected upon tapping.
         tableView.deselectRow(at: indexPath, animated: false)
 
+        
+        //******************************
+        //Mark the row with a checkmark
+        //******************************
         itemArray[indexPath.row].done = itemArray[indexPath.row].done ? false : true
+        
         //Even shorter way of setting it...
         //itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        //******************************
+        //Update the data
+        //******************************
+        //The following line would change the title of the task.
+        //This could be coded up for use in an AlertAction, so that when the user long-pressed, an alert let them change the title.
+        //itemArray[indexPath.row].setValue("Task completed", forKey: "title")
+        
+        //***************************************
+        //Delete the row altogether when clicked.
+        //***************************************
+        
+        //Remove the item from the database.
+            //context.delete(itemArray[indexPath.row])
+        //Remove the item from the array. (Updates screen.)
+            //itemArray.remove(at: indexPath.row)
+
         
         saveItems()
         
@@ -85,8 +111,9 @@ class TodoListViewController: UITableViewController {
             //When user clicks the Add Item button on our UIAlert
 
             //Update array with new item
-            let newItem = Item()
+            let newItem = Item(context: self.context)
             newItem.title = textField.text!
+            newItem.done = false
             self.itemArray.append(newItem)
             
             //Save changes
@@ -110,30 +137,71 @@ class TodoListViewController: UITableViewController {
     
     func saveItems() {
 
-        let encoder = PropertyListEncoder()
-        
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print("Error encoding itemArray, \(error)")
+            print("Error saving context. Error message: \(error)")
         }
         
         self.tableView.reloadData()
 
     }
     
-    func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error decoding itemArray, \(error)")
-            }
+    //request parameter used for searching. Default value shows all items
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching data from context. Error message: \(error)")
         }
+
+        tableView.reloadData()
+        
     }
+    
     
 }
 
+//MARK: - Search Bar Methods
+extension TodoListViewController: UISearchBarDelegate {
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        //Dismiss keyboard
+        DispatchQueue.main.async {
+            searchBar.resignFirstResponder()
+        }
+        
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        //Dismiss keyboard and show all items when the searchbar returns to empty
+        if searchBar.text?.count == 0 {
+            loadItems()
+            
+            //Run on the main thread so that searchbar loses focus and keyboard is dimissed, even if background threads are running. Otherwise, app might assign this code to another thread...
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+            
+        //Perform the search as the user types
+        } else if searchBar.text!.count > 0 {
+            
+            let request: NSFetchRequest<Item> = Item.fetchRequest()
+            //print(searchBar.text!)
+            
+            //Query data to filter by search
+            //[cd] makes query case and diacritic (letters with accent symbols) insensitive
+            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            
+            //Sort data using array of one element.
+            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            
+            loadItems(with: request)
+            
+        }
+    }
+
+
+}
