@@ -11,8 +11,7 @@ import RealmSwift
 
 class CategoryViewController: UITableViewController {
 
-    //Persist data across sessions
-    let realm = try! Realm()
+    var realm: Realm!
 
     //Hold lists of categories
     var categories: Results<Category>?
@@ -33,6 +32,9 @@ class CategoryViewController: UITableViewController {
 //        newCat3.name = "Home"
 //        categoryArray.append(newCat3)
 
+        //Create realm instance
+        realm = try! Realm()
+        
         //Read existing items
         loadCategories()
         

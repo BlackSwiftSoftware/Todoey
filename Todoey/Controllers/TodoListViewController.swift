@@ -10,11 +10,11 @@ import UIKit
 import RealmSwift
 
 class TodoListViewController: UITableViewController {
-    
+
+    var realm: Realm!
+
     //Holds list of todo items
     var todoItems: Results<Item>?
-    
-    let realm = try! Realm()
     
     //Used to filter a list of items by a specific category
     var selectedCategory: Category? {
@@ -40,6 +40,9 @@ class TodoListViewController: UITableViewController {
 //        let newItem3 = Item()
 //        newItem3.title = "Ask Bruce to stop biting me"
 //        itemArray.append(newItem3)
+        
+        //Create Realm instance
+        realm = try! Realm()
         
     }
     
@@ -181,7 +184,7 @@ extension TodoListViewController: UISearchBarDelegate {
         //Perform the search as the user types
         } else if searchBar.text!.count > 0 {
 
-            todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
+            todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
             
             tableView.reloadData()
             
