@@ -59,7 +59,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Now that we've told Realm how to handle the schema change, opening the file will automatically perform the migration
         do {
-            let realm = try Realm()
+            _ = try Realm()
         } catch {
             print("Error initializing new realm. \(error)")
         }

@@ -42,20 +42,30 @@ class CategoryViewController: UITableViewController {
 
     //MARK: - Tableview DataSource Methods
     
+    //Number of Rows in the table
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        //Set local count variable to 0 if todoItems.count is nil
+        let count = categories?.count ?? 0
+        
+        //Return the count if greater than 0. Otherwise, return 1.
+        return (count > 0) ? count : 1
+        
+    }
+    
     //What goes in the table
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         //indexPath is location identifier for each cell
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet"
+
+        if categories?.isEmpty == false {
+            cell.textLabel?.text = categories?[indexPath.row].name
+        } else {
+            cell.textLabel?.text = "No categories added yet"
+        }
         
         return cell
-    }
-    
-    //Number of Rows in the table
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1 //nil coalescing operator returns 1 if nil
     }
     
     //MARK: - Tableview Delegate Methods
