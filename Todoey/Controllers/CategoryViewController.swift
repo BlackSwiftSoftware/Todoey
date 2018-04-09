@@ -8,9 +8,8 @@
 
 import UIKit
 import RealmSwift
-import SwipeCellKit
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     var realm: Realm!
 
@@ -52,7 +51,7 @@ class CategoryViewController: UITableViewController {
         
         //Set local count variable to 0 if todoItems.count is nil
         let count = categories?.count ?? 0
-        
+
         //Return the count if greater than 0. Otherwise, return 1.
         return (count > 0) ? count : 1
         
@@ -61,10 +60,8 @@ class CategoryViewController: UITableViewController {
     //What goes in the table
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        //indexPath is location identifier for each cell
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! SwipeTableViewCell
-
-        cell.delegate = self
+        //get cell from the super class that's handling this table
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if categories?.isEmpty == false {
             cell.textLabel?.text = categories?[indexPath.row].name
@@ -102,24 +99,24 @@ class CategoryViewController: UITableViewController {
         
     }
     
-    func deleteCategory(_ category: Category) {
-        
-        //print("I called the delete function. \(String(describing: categoryToDelete))")
-        
-        do {
-            try realm.write {
-                //Delete items associated with category. Order matters! (Must delete items first.)
-                realm.delete(category.items)
-                //Now delete category.
-                realm.delete(category)
+    override func deleteFromModel(at indexPath: IndexPath) {
+
+        if let categoryToDelete = self.categories?[indexPath.row] {
+            do {
+                try realm.write {
+                    //Delete items associated with category. Order matters! (Must delete items first.)
+                    realm.delete(categoryToDelete.items)
+                    //Now delete category.
+                    realm.delete(categoryToDelete)
+                }
+            } catch {
+                print("Error deleting category. \(error)")
             }
-        } catch {
-            print("Error deleting category. \(error)")
         }
-        
-        //We don't call tableView.reloadData because the editActionsOptionsForRowAt method does this for us.
+
+        //We don't call tableView.reloadData because the editActionsOptionsForRowAt method in SwipeCellKit does this for us.
         //tableView.reloadData()
-        
+
     }
     
     //request parameter used for searching. Default value shows all items
@@ -162,43 +159,6 @@ class CategoryViewController: UITableViewController {
         
         present(alert, animated: true, completion: nil)
         
-    }
-    
-}
-
-
-//MARK: - Swipe Cell Delegate Methods
-extension CategoryViewController: SwipeTableViewCellDelegate {
-    
-    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        
-        guard orientation == .right else { return nil }
-        
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
-            // handle action by updating model with deletion
-            if let categoryToDelete = self.categories?[indexPath.row] {
-                self.deleteCategory(categoryToDelete)
-            }
-        }
-        
-        // customize the action appearance
-        deleteAction.image = UIImage(named: "delete-icon")
-        
-        return [deleteAction]
-    }
-    
-    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
-        
-        var options = SwipeTableOptions()
-        options.expansionStyle = .destructive
-        
-        //Looks like I can use .fill to do something without destroying the row...
-        //read more here: https://cocoapods.org/pods/SwipeCellKit#expansion
-        //also this? https://github.com/SwipeCellKit/SwipeCellKit/blob/develop/Guides/Advanced.md
-        
-        //options.expansionStyle = .fill
-        
-        return options
     }
     
 }
