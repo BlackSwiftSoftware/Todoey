@@ -18,7 +18,7 @@ class TodoListViewController: UITableViewController {
     
     //Used to filter a list of items by a specific category
     var selectedCategory: Category? {
-        didSet{
+        didSet {
             loadItems()
         }
     }
