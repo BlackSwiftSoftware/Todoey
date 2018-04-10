@@ -13,6 +13,7 @@ class Category: Object {
     
     @objc dynamic var name: String = ""
     @objc dynamic var dateCreated: Date = Date()
+    @objc dynamic var categoryBGColor: String = "FFFFFF"
     
     let items = List<Item>()
     

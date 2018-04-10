@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -23,7 +24,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let config = Realm.Configuration(
             // Set the new schema version. This must be greater than the previously used
             // version (if you've never set a schema version before, the version is 0).
-            schemaVersion: 1,
+            schemaVersion: 2,
             
             // Set the block which will be called automatically when opening a Realm with
             // a schema version lower than the one set above
@@ -52,6 +53,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         newObject!["dateCreated"] = dateCreated
                     }
                 }
+                //Implement new property of Category to assign and store a random background color
+                if (oldSchemaVersion < 2) {
+                    let randomBGColor = UIColor.randomFlat.hexValue()
+                    migration.enumerateObjects(ofType: Category.className()) { oldObject, newObject in
+                        //initially assign all categories a random color. Were this a production app, it would be best to somehow give each category a random color, but that would involve querying all the categories, looping over them, and then assigning each a random color.
+                        newObject!["categoryBGColor"] = randomBGColor
+                    }
+                    
+                }
         })
         
         // Tell Realm to use this new configuration object for the default Realm
@@ -65,6 +75,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         return true
+        
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

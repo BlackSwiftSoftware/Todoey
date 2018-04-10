@@ -11,14 +11,18 @@
 
 import UIKit
 import SwipeCellKit
+import ChameleonFramework
 
 class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegate {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        //Set tableView Properties
+        tableView.separatorStyle = .none
+        
     }
-    
+
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -67,4 +71,11 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
         //update data model using override function from within the view controller we're working on.
     }
     
+}
+
+//Necessary to use ChameleonFramework    method to set the statusbar color from the child ViewController.
+extension UINavigationController {
+    open override var preferredStatusBarStyle: UIStatusBarStyle {
+        return topViewController?.preferredStatusBarStyle ?? .default
+    }
 }

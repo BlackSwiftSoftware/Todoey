@@ -8,29 +8,21 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 
     var realm: Realm!
 
+//    override var preferredStatusBarStyle: UIStatusBarStyle {
+//        return .lightContent
+//    }
+    
     //Hold lists of categories
     var categories: Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-//        //Hard code static values for testing.
-//        let newCat = Category()
-//        newCat.name = "Groceries"
-//        categoryArray.append(newCat)
-//
-//        let newCat2 = Category()
-//        newCat2.name = "Work"
-//        categoryArray.append(newCat2)
-//
-//        let newCat3 = Category()
-//        newCat3.name = "Home"
-//        categoryArray.append(newCat3)
 
         //Create realm instance
         realm = try! Realm()
@@ -42,8 +34,11 @@ class CategoryViewController: SwipeTableViewController {
         //This is a hack. And it's ugly. One can set the deleteAction title to 'nil' in the Swipe Cell Delegate Methods, which reduces the height needed by showing only the icon... I'm leaving this code since that's what the tutorial did.
         tableView.rowHeight = 80
         
+        //Chameleon framework allows styling the status bar (carrier, clock, battery) based on underlying background.
+        self.setStatusBarStyle(UIStatusBarStyleContrast)
+        
     }
-
+    
     //MARK: - Tableview DataSource Methods
     
     //Number of Rows in the table
@@ -65,8 +60,16 @@ class CategoryViewController: SwipeTableViewController {
         
         if categories?.isEmpty == false {
             cell.textLabel?.text = categories?[indexPath.row].name
+            
+            if let bgColor = UIColor(hexString: (categories?[indexPath.row].categoryBGColor)!) {
+                cell.backgroundColor = bgColor
+                cell.textLabel?.textColor = ContrastColorOf(bgColor, returnFlat: true)
+            }
+            
         } else {
+            
             cell.textLabel?.text = "No categories added yet"
+            
         }
         
         return cell
@@ -143,6 +146,7 @@ class CategoryViewController: SwipeTableViewController {
             //Update array with new item
             let newCategory = Category()
             newCategory.name = textField.text!
+            newCategory.categoryBGColor = UIColor.randomFlat.hexValue()
             
             //Save changes
             self.save(category: newCategory)
@@ -162,3 +166,4 @@ class CategoryViewController: SwipeTableViewController {
     }
     
 }
+
