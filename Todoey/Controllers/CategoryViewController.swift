@@ -13,13 +13,14 @@ import ChameleonFramework
 class CategoryViewController: SwipeTableViewController {
 
     var realm: Realm!
-
-//    override var preferredStatusBarStyle: UIStatusBarStyle {
-//        return .lightContent
-//    }
     
     //Hold lists of categories
     var categories: Results<Category>?
+    
+    //Set the color of the carrier, clock, battery...
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +36,9 @@ class CategoryViewController: SwipeTableViewController {
         tableView.rowHeight = 80
         
         //Chameleon framework allows styling the status bar (carrier, clock, battery) based on underlying background.
-        self.setStatusBarStyle(UIStatusBarStyleContrast)
+        //This call seemed to work, but when going back and forth between categories and todo items, the status bar would occasionally revert to black.
+        //Commenting out this line that uses the Chamelon Framework and inside using the preferredStatusBarStyle above seem to work reliably.
+        //self.setStatusBarStyle(UIStatusBarStyleContrast)
         
     }
     

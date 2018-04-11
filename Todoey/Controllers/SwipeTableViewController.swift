@@ -73,7 +73,7 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
     
 }
 
-//Necessary to use ChameleonFramework    method to set the statusbar color from the child ViewController.
+//Necessary to use ChameleonFramework method to set the statusbar color from the child ViewController.
 extension UINavigationController {
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         return topViewController?.preferredStatusBarStyle ?? .default
